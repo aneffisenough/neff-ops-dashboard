@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neff Ops Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#1a237e;--accent:#1565c0;--light:#e8eaf6;--success:#2e7d32;--warning:#f57f17;--danger:#c62828;--bg:#f5f5f5;--card:#ffffff;--text:#212121;--muted:#757575;--radius:10px;--shadow:0 2px 8px rgba(0,0,0,.12)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--primary);color:#fff;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+header .brand{font-size:1.15rem;font-weight:700}
+header .brand span{color:#90caf9}
+header .nav-links{display:flex;gap:.25rem}
+header .nav-links a{color:#fff;text-decoration:none;padding:.4rem .75rem;border-radius:6px;font-size:.875rem;transition:background .15s}
+header .nav-links a:hover,header .nav-links a.active{background:rgba(255,255,255,.15)}
+#menu-toggle{display:none;background:none;border:none;cursor:pointer;padding:.4rem}
+#menu-toggle span{display:block;width:22px;height:2px;background:#fff;margin:4px 0;border-radius:2px}
+#drawer{display:none;position:fixed;inset:56px 0 0 0;background:var(--primary);z-index:99;padding:1rem}
+#drawer.open{display:block}
+#drawer a{display:block;color:#fff;text-decoration:none;padding:.75rem 1rem;border-radius:6px;font-size:1rem;margin-bottom:.25rem}
+.page{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem}
+h1.page-title{font-size:1.4rem;font-weight:700;margin-bottom:1.25rem;color:var(--primary)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:1.25rem 1.5rem;box-shadow:var(--shadow);display:flex;align-items:center;gap:1rem}
+.stat-card .icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.stat-card .info .value{font-size:1.75rem;font-weight:700;line-height:1}
+.stat-card .info .label{font-size:.8rem;color:var(--muted);margin-top:.2rem;text-transform:uppercase;letter-spacing:.5px}
+.icon-blue{background:#e3f2fd}.icon-green{background:#e8f5e9}.icon-orange{background:#fff3e0}.icon-red{background:#ffebee}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.25rem}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--primary);border-bottom:2px solid var(--light);padding-bottom:.5rem}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.875rem}
+th{background:var(--light);color:var(--primary);padding:.6rem .75rem;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px}
+td{padding:.65rem .75rem;border-bottom:1px solid #f0f0f0}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:.2rem .55rem;border-radius:999px;font-size:.7rem;font-weight:600;text-transform:uppercase}
+.badge-success{background:#e8f5e9;color:#2e7d32}
+.badge-warning{background:#fff8e1;color:#f57f17}
+.badge-danger{background:#ffebee;color:#c62828}
+.task-list{list-style:none}
+.task-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #f0f0f0;font-size:.875rem}
+.task-list li:last-child{border-bottom:none}
+.task-list input[type=checkbox]{margin-top:.15rem;accent-color:#1565c0;width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.task-list .done{text-decoration:line-through;color:#757575}
+.link-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem}
+.quick-link{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:1rem .5rem;background:var(--light);border-radius:var(--radius);text-decoration:none;color:var(--primary);font-size:.8rem;font-weight:600;text-align:center;transition:background .15s,transform .1s}
+.quick-link:hover{background:#c5cae9;transform:translateY(-2px)}
+.quick-link .ql-icon{font-size:1.6rem}
+.progress-item{margin-bottom:.85rem}
+.progress-item .row{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.3rem}
+.bar-bg{background:#e0e0e0;border-radius:999px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;background:#1565c0}
+.bar-fill.green{background:#2e7d32}.bar-fill.orange{background:#fb8c00}
+footer{text-align:center;padding:2rem 1rem 1.5rem;font-size:.75rem;color:#757575}
+@media(max-width:768px){header .nav-links{display:none}#menu-toggle{display:block}.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr}.stat-card{padding:1rem;gap:.75rem}.stat-card .icon{width:40px;height:40px;font-size:1.2rem}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">Neff <span>Ops</span></div>
+<nav class="nav-links">
+<a href="#" class="active">Dashboard</a><a href="#">Jobs</a><a href="#">Crew</a><a href="#">Equipment</a><a href="#">Reports</a>
+</nav>
+<button id="menu-toggle" onclick="toggleDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
+</header>
+<div id="drawer">
+<a href="#" onclick="toggleDrawer()">Dashboard</a><a href="#" onclick="toggleDrawer()">Jobs</a><a href="#" onclick="toggleDrawer()">Crew</a><a href="#" onclick="toggleDrawer()">Equipment</a><a href="#" onclick="toggleDrawer()">Reports</a>
+</div>
+<main class="page">
+<h1 class="page-title">Operations Overview</h1>
+<div class="stats-grid">
+<div class="stat-card"><div class="icon icon-blue">&#128203;</div><div class="info"><div class="value">12</div><div class="label">Active Jobs</div></div></div>
+<div class="stat-card"><div class="icon icon-green">&#128119;</div><div class="info"><div class="value">8</div><div class="label">Crew On-Site</div></div></div>
+<div class="stat-card"><div class="icon icon-orange">&#128679;</div><div class="info"><div class="value">3</div><div class="label">Pending Tasks</div></div></div>
+<div class="stat-card"><div class="icon icon-red">&#9888;&#65039;</div><div class="info"><div class="value">1</div><div class="label">Urgent Items</div></div></div>
+</div>
+<div class="card" style="margin-bottom:1rem"><h2>Quick Links</h2><div class="link-grid"><a class="quick-link" href="#"><span class="ql-icon">&#128221;</span>New Job</a><a class="quick-link" href="#"><span class="ql-icon">&#128100;</span>Add Crew</a><a class="quick-link" href="#"><span class="ql-icon">&#128295;</span>Equipment</a><a class="quick-link" href="#"><span class="ql-icon">&#128197;</span>Schedule</a><a class="quick-link" href="#"><span class="ql-icon">&#128202;</span>Reports</a><a class="quick-link" href="#"><span class="ql-icon">&#128222;</span>Contacts</a></div></div>
+<div class="two-col">
+<div class="card"><h2>Active Jobs</h2><div class="table-wrap"><table><thead><tr><th>Job</th><th>Location</th><th>Status</th></tr></thead><tbody><tr><td>Job #1042</td><td>Main St</td><td><span class="badge badge-success">On Track</span></td></tr><tr><td>Job #1043</td><td>Oak Ave</td><td><span class="badge badge-warning">Delayed</span></td></tr><tr><td>Job #1044</td><td>Pine Rd</td><td><span class="badge badge-success">On Track</span></td></tr><tr><td>Job #1045</td><td>Elm Blvd</td><td><span class="badge badge-danger">Urgent</span></td></tr><tr><td>Job #1046</td><td>Cedar Ln</td><td><span class="badge badge-success">On Track</span></td></tr></tbody></table></div></div>
+<div class="card"><h2>Today's Tasks</h2><ul class="task-list"><li><input type="checkbox" checked><span class="done">Morning crew check-in</span></li><li><input type="checkbox"><span>Deliver materials to Job #1043</span></li><li><input type="checkbox"><span>Inspect equipment - Truck 3</span></li><li><input type="checkbox"><span>Call client re: Job #1045</span></li><li><input type="checkbox"><span>Submit weekly safety report</span></li><li><input type="checkbox"><span>Review next week's schedule</span></li></ul></div>
+</div>
+<div class="two-col">
+<div class="card"><h2>Crew Status</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>J. Torres</td><td>Foreman</td><td><span class="badge badge-success">On-Site</span></td></tr><tr><td>M. Lee</td><td>Operator</td><td><span class="badge badge-success">On-Site</span></td></tr><tr><td>D. Smith</td><td>Laborer</td><td><span class="badge badge-warning">En Route</span></td></tr><tr><td>K. Brown</td><td>Laborer</td><td><span class="badge badge-success">On-Site</span></td></tr><tr><td>R. Garcia</td><td>Operator</td><td><span class="badge badge-danger">Off Today</span></td></tr></tbody></table></div></div>
+<div class="card"><h2>Project Progress</h2>
+<div class="progress-item"><div class="row"><span>Job #1042 - Main St</span><span>80%</span></div><div class="bar-bg"><div class="bar-fill green" style="width:80%"></div></div></div>
+<div class="progress-item"><div class="row"><span>Job #1043 - Oak Ave</span><span>45%</span></div><div class="bar-bg"><div class="bar-fill orange" style="width:45%"></div></div></div>
+<div class="progress-item"><div class="row"><span>Job #1044 - Pine Rd</span><span>65%</span></div><div class="bar-bg"><div class="bar-fill" style="width:65%"></div></div></div>
+<div class="progress-item"><div class="row"><span>Job #1045 - Elm Blvd</span><span>20%</span></div><div class="bar-bg"><div class="bar-fill orange" style="width:20%"></div></div></div>
+<div class="progress-item"><div class="row"><span>Job #1046 - Cedar Ln</span><span>55%</span></div><div class="bar-bg"><div class="bar-fill green" style="width:55%"></div></div></div>
+</div>
+</div>
+</main>
+<footer>Neff Ops Dashboard &mdash; 2026</footer>
+<script>
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open')}
+document.addEventListener('click',function(e){var d=document.getElementById('drawer'),t=document.getElementById('menu-toggle');if(d.classList.contains('open')&&!d.contains(e.target)&&!t.contains(e.target))d.classList.remove('open')});
+</script>
+</body>
+</html>
